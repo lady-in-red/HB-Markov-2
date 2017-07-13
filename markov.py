@@ -1,79 +1,159 @@
+"""Generate Markov text from text files."""
 import os
-import sys
-from random import choice
+#import sys
 import twitter
+from random import choice
 
 
-def open_and_read_file(filenames):
-    """Given a list of files, open them, read the text, and return one long
-        string."""
+def open_and_read_file(file_path):
+    """Take file path as string; return text as string.
 
-    body = ""
+    Takes a string that is a file path, opens the file, and turns
+    the file's contents as one string of text.
+    """
+ # body = ""
 
-    for filename in filenames:
-        text_file = open(filename)
-        body = body + text_file.read()
-        text_file.close()
+ #    for filename in filenames:
+ #        text_file = open(filename)
+ #        body = body + text_file.read()
+ #        text_file.close()
 
-    return body
+    #return body
+    # your code goes here
+    contents = open(file_path).read()
+    text = contents.split()
+    return text
 
 
 def make_chains(text_string):
-    """Takes input text as string; returns dictionary of markov chains."""
+    """Take input text as string; return dictionary of Markov chains.
+
+    A chain will be a key that consists of a tuple of (word1, word2)
+    and the value would be a list of the word(s) that follow those two
+    words in the input text.
+
+    For example:
+
+        >>> chains = make_chains("hi there mary hi there juanita")
+
+    Each bigram (except the last) will be a key in chains:
+
+        >>> sorted(chains.keys())
+        [('hi', 'there'), ('mary', 'hi'), ('there', 'mary')]
+
+    Each item in chains is a list of all possible following words:
+
+        >>> chains[('hi', 'there')]
+        ['mary', 'juanita']
+
+        >>> chains[('there','juanita')]
+        [None]
+    """
 
     chains = {}
 
-    words = text_string.split()
-
-    for i in range(len(words) - 2):
-        key = (words[i], words[i + 1])
-        value = words[i + 2]
-
-        if key not in chains:
-            chains[key] = []
-
-        chains[key].append(value)
-
-        # or we could replace the last three lines with:
-        #    chains.setdefault(key, []).append(value)
-
+    # your code goes here
+    # iterating the string to get tuples to be set as keys and the following word
+    # to be set at its value.
+    for i in range(len(text_string) - 2):
+        key1 = (text_string[i], text_string[i + 1])
+        value1 = i + 2
+        # if the tuple key is not in dictionary, add key, value
+        if key1 not in chains:
+            chains[key1] = [text_string[value1]]
+        # if in dictionary, append to value list
+        else:
+            chains[key1].append(text_string[value1])
+    # grab last two words in filestring ane make = to 1 tuple (-2, -1): {[None]}
+    last_key = (text_string[-2], text_string[-1])
+    # if in dictionary, append
+    if last_key in chains:
+        chains[last_key].append(None)
+    # if not, create
+    else:
+        chains[last_key] = [None]
     return chains
 
 
 def make_text(chains):
-    """Takes dictionary of markov chains; returns random text."""
+    """Return text from chains."""
 
-    key = choice(chains.keys())
-    words = [key[0], key[1]]
-    while key in chains:
-        # Keep looping until we have a key that isn't in the chains
-        # (which would mean it was the end of our original text)
-        #
-        # Note that for long texts (like a full book), this might mean
-        # it would run for a very long time.
+    words = []
 
-        word = choice(chains[key])
-        words.append(word)
-        key = (key[1], word)
+    # your code goes here
+    # pull random word from dictionary, add to list
+    words.extend(choice(chains.keys()))
+    # access tuple, find value (rand choose), add to list
 
+    while True:
+        # key = (words[-2], words[-1]))
+        # possible_next = chains[key]
+        # next_word = chosie(possible_next)
+        next_word = choice(chains[(words[-2], words[-1])])
+        if next_word is None or (len(" ".join(words)) > 140):
+                                # and (
+                                # words[-1][-1] == "." or
+                                # words[-1][-1] == "?" or
+                                # words[-1][-1] == "!" or
+                                # words[-1][-1] == "\"" or
+                                # words[-1][-1] == ")" or
+                                # words[-1][-1] == "*")):
+            break
+        else:
+            words.append(next_word)
     return " ".join(words)
+    # make (y, z)
+    # search dictionary for y, z
+    # repeat until reach none.
+    # change list into string
 
 
 def tweet(chains):
-    # Use Python os.environ to get at environmental variables
+  # Use Python os.environ to get at environmental variables
     # Note: you must run `source secrets.sh` before running this file
     # to make sure these environmental variables are set.
-    pass
+
+    # Note: you must run `source secrets.sh` before running
+    # this file to set required environmental variables.
+
+    api = twitter.Api(consumer_key=os.environ['TWITTER_CONSUMER_KEY'],
+                      consumer_secret=os.environ['TWITTER_CONSUMER_SECRET'],
+                      access_token_key=os.environ['TWITTER_ACCESS_TOKEN_KEY'],
+                      access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET'])
+
+    # This will print info about credentials to make sure
+    # they're correct
+    # print api.VerifyCredentials()
+
+    # # Send a tweet
+    # status = api.PostUpdate("Your tweet goes here.")
+    # print status.text
+
+    # while in loop, if not q, stay in loop of asking for status + printing text
+    # when q is entered, break
+    while True:
+        # make some funny text and print it out to the user, saying "You tweeted this!"
+        tweet_again = raw_input('Enter to tweet again? [q to quit] >')
+        if tweet_again == "q":
+            break
+        else:
+            print "okay, keep going!"
+
+
+
 
 # Get the filenames from the user through a command line prompt, ex:
 # python markov.py green-eggs.txt shakespeare.txt
-filenames = sys.argv[1:]
 
-# Open the files and turn them into one long string
-text = open_and_read_file(filenames)
+input_path = "brothers-grim.txt"
+
+# Open the file and turn it into one long string
+input_text = open_and_read_file(input_path)
 
 # Get a Markov chain
-chains = make_chains(text)
+chains = make_chains(input_text)
 
-# Your task is to write a new function tweet, that will take chains as input
-# tweet(chains)
+# Produce random text
+random_text = make_text(chains)
+
+print random_text
