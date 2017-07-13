@@ -90,7 +90,10 @@ def make_text(chains):
         # possible_next = chains[key]
         # next_word = chosie(possible_next)
         next_word = choice(chains[(words[-2], words[-1])])
-        if next_word is None or (len(" ".join(words)) > 140):
+        if next_word is None:
+            break
+        elif (len(" ".join(words) + " " + next_word) > 140):
+            break
                                 # and (
                                 # words[-1][-1] == "." or
                                 # words[-1][-1] == "?" or
@@ -98,7 +101,6 @@ def make_text(chains):
                                 # words[-1][-1] == "\"" or
                                 # words[-1][-1] == ")" or
                                 # words[-1][-1] == "*")):
-            break
         else:
             words.append(next_word)
     return " ".join(words)
@@ -123,21 +125,25 @@ def tweet(chains):
 
     # This will print info about credentials to make sure
     # they're correct
-    # print api.VerifyCredentials()
+    print api.VerifyCredentials()
 
     # # Send a tweet
-    # status = api.PostUpdate("Your tweet goes here.")
-    # print status.text
+    # random_tweet = make_text(chains)
+    status = api.PostUpdate(chains)
+    print status.text
 
     # while in loop, if not q, stay in loop of asking for status + printing text
     # when q is entered, break
+    #random_tweet = make_text(chains)
+
     while True:
         # make some funny text and print it out to the user, saying "You tweeted this!"
         tweet_again = raw_input('Enter to tweet again? [q to quit] >')
         if tweet_again == "q":
             break
         else:
-            print "okay, keep going!"
+            print random_tweet
+
 
 
 
@@ -156,4 +162,4 @@ chains = make_chains(input_text)
 # Produce random text
 random_text = make_text(chains)
 
-print random_text
+tweet(random_text)
